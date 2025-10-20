@@ -1,0 +1,56 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+
+public class WeatherAppSimple {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        try {
+            System.out.print("Enter city name: ");
+            String city = sc.nextLine().trim().replace(" ", "+");
+            String apiUrl = "https://wttr.in/" + city + "?format=j1";
+            URL url = new URL(apiUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(connection.getInputStream())
+            );
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            String data = response.toString();
+            String temperature = extractValue(data, "\"temp_C\":\"");
+            String humidity = extractValue(data, "\"humidity\":\"");
+            String condition = extractValue(data, "\"weatherDesc\":[{\"value\":\"");
+
+            // Step 6: Print result
+            System.out.println("\n===============================");
+            System.out.println("       WEATHER DATA REPORT      ");
+            System.out.println("===============================");
+            System.out.println("City: " + city.replace("+", " "));
+            System.out.println("Temperature (°C): " + temperature);
+            System.out.println("Humidity (%): " + humidity);
+            System.out.println("Condition: " + condition);
+            System.out.println("===============================");
+
+        } catch (Exception e) {
+            System.out.println("Error fetching weather data: " + e.getMessage());
+        } finally {
+            sc.close();
+        }
+    }
+    private static String extractValue(String data, String key) {
+        int index = data.indexOf(key);
+        if (index == -1) return "N/A"; 
+        int start = index + key.length();
+        int end = data.indexOf("\"", start);
+        if (end == -1) return "N/A";
+        return data.substring(start, end);
+    }
+}
